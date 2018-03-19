@@ -3,12 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using AC;
 
-public class SimpleInteractionObject : MonoBehaviour {
 
-    //What hands are used in the interaction
-    public enum HandsUsed { RightHand, LeftHand, BothHands };
-    public HandsUsed handsUsed;
-
+public class SimpleInteractionObject : MonoBehaviour
+{
     public Animator animator;
     public AnimationClip clipToPlay;
 
@@ -23,6 +20,5 @@ public class SimpleInteractionObject : MonoBehaviour {
     public AudioClip dropSound;
     public AudioClip interactionSound;
     public AudioClip inventorySound;
-    
-
 }
+

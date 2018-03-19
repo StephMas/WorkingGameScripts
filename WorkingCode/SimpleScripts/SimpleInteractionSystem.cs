@@ -13,28 +13,26 @@ public class SimpleInteractionSystem : MonoBehaviour {
 
     //The object data
     public SimpleInteractionObject interactionObject;
-    public Transform leftHoldPosition;
-    public Transform rightHoldPosition;
-    public Marker dropMarker;
-    public Transform emptyParent;
     public GameObject linkedPrefab;
     public GameObject objectBeingHeld;
     public GameObject instantiatedPrefab;
-    
-    //What hands are used in the interaction
-    public enum HandsUsed { RightHand, LeftHand, BothHands};
-    public HandsUsed handsUsed;
 
-    //For the animation behaviour curves
-    public Transform rightHandTarget;
-    public Transform leftHandTarget;
+    //The scene parent to drop the transforms to
+    public Transform sceneParent;
+
+    //What hands are used in the interaction    
+    public bool noHandIK;
+    public bool isRightHand;
+    public bool isLeftHand;
+    public bool isBothHands;
 
     //Audio data
     private AudioSource audioSource;
-    public AudioClip holdSound;
-    public AudioClip dropSound;
-    public AudioClip interactionSound;
-    public AudioClip inventorySound;
+    public AudioClip inventoryClipToPlay;
+    public AudioClip holdClipToPlay;
+    public AudioClip dropClipToPlay;
+    public AudioClip interactionClipToPlay;
+
 
     private void Start()
     {
@@ -51,29 +49,34 @@ public class SimpleInteractionSystem : MonoBehaviour {
 
     }
 
-    //This will be called to pick up an object. It doesn't have a dependency, but should not be called if you're holding something.
-    //Uses animation curve data for the interaction and you can only use one hand at a time.
     void PickUpObject()
     {
-        GameObject toPickUp = interactionObject.gameObject;
+        //GameObject toPickUp = interactionObject.gameObject;
 
         if (!isHoldingObject)
         {
-            if (handsUsed == HandsUsed.RightHand)
+            if (isRightHand)
             {
-                interactionObject.rightHandTarget.parent = emptyParent.transform;
-                character.HoldObject(toPickUp, Hand.Right);
-                SetHoldPositionRotation(interactionObject.transform, rightHoldPosition);
+                interactionObject.rightHandTarget.parent = sceneParent.transform;
+                character.HoldObject(interactionObject.gameObject, Hand.Right);
+                SetHoldPositionRotation(interactionObject.transform, interactionObject.rightHoldPosition);
 
             }
-            else if (handsUsed == HandsUsed.LeftHand)
+            else if (isLeftHand)
             {
-                interactionObject.leftHandTarget.parent = emptyParent.transform;
-                character.HoldObject(toPickUp, Hand.Left);
-                SetHoldPositionRotation(interactionObject.transform, leftHoldPosition);
+                interactionObject.leftHandTarget.parent = sceneParent.transform;
+                character.HoldObject(interactionObject.gameObject, Hand.Left);
+                SetHoldPositionRotation(interactionObject.transform, interactionObject.leftHoldPosition);
+            }
+            else if (isBothHands)
+            {
+                interactionObject.leftHandTarget.parent = sceneParent.transform;
+                character.HoldObject(interactionObject.gameObject, Hand.Left);
+                SetHoldPositionRotation(interactionObject.transform, interactionObject.leftHoldPosition);
+                SetHoldPositionRotation(interactionObject.transform, interactionObject.rightHoldPosition);
             }
 
-            PlayHoldSound(holdSound);
+            PlayHoldSound(holdClipToPlay);
             isHoldingObject = true;
         }
         else
@@ -94,7 +97,8 @@ public class SimpleInteractionSystem : MonoBehaviour {
             Transform eParent = interactionObject.emptyParent;
             character.ReleaseHeldObjects();
             SetReleasePositionRotation(toDrop.transform, eParent);
-            PlayDropSound(dropSound);
+
+            PlayDropSound(dropClipToPlay);
         }
 
     }
@@ -106,16 +110,24 @@ public class SimpleInteractionSystem : MonoBehaviour {
             instantiatedPrefab = Instantiate(linkedPrefab) as GameObject;
             interactionObject = instantiatedPrefab.GetComponentInChildren<SimpleInteractionObject>();
 
-            character.HoldObject(interactionObject.gameObject, Hand.Left);
-            SetHoldPositionRotation(interactionObject.gameObject.transform, leftHoldPosition);
+            if (isLeftHand)
+            {
+                character.HoldObject(interactionObject.gameObject, Hand.Left);
+                SetHoldPositionRotation(interactionObject.gameObject.transform, interactionObject.leftHoldPosition);
+            }
+            if (isRightHand)
+            {
+                character.HoldObject(interactionObject.gameObject, Hand.Right);
+                SetHoldPositionRotation(interactionObject.gameObject.transform, interactionObject.rightHoldPosition);
+            }
+
             isHoldingObject = true;
-            PlaySFXSound(inventorySound);
+            PlaySFXSound(inventoryClipToPlay);
         }
         else
         {
             Debug.Log("You can't take out another object until you drop the one you're holding.");
         }
-
     }
 
     void PutObjectAway()
@@ -129,18 +141,18 @@ public class SimpleInteractionSystem : MonoBehaviour {
                 Destroy(instantiatedPrefab);
             }
             
-            PlaySFXSound(inventorySound);
+            PlaySFXSound(inventoryClipToPlay);
             isHoldingObject = false;
+            ClearData();
+
         }
     }
 
     void SetHoldPositionRotation(Transform _transform, Transform handHold)
     {
         _transform.localRotation = handHold.localRotation;
-        _transform.localPosition = handHold.localPosition;
-        
-        //_transform.DOLocalMove(holdPosition.transform.localPosition, 0.25f, false);
-        //_transform.DOLocalRotate(holdPosition.transform.localRotation.eulerAngles, 0.25f);
+        _transform.localPosition = handHold.localPosition;        
+
         objectBeingHeld = interactionObject.gameObject;
 
     }
@@ -190,22 +202,29 @@ public class SimpleInteractionSystem : MonoBehaviour {
     void SetReleasePositionRotation(Transform _transform, Transform _parent)
     {
         _transform.parent = _parent;
-        _transform.transform.DOLocalMove(dropMarker.transform.localPosition, 0.5f, false);
-        _transform.transform.DOLocalRotate(dropMarker.transform.localRotation.eulerAngles, 0.5f);
+        _transform.transform.localPosition = interactionObject.dropPosition.transform.localPosition;
+        _transform.transform.localRotation = interactionObject.dropPosition.transform.localRotation;
+        
+        //_transform.transform.DOLocalMove(interactionObject.dropPosition.transform.localPosition, 0.5f, false);
+        //_transform.transform.DOLocalRotate(interactionObject.dropPosition.transform.localRotation.eulerAngles, 0.5f);
         isHoldingObject = false;
-
-        ClearData();
 
     }
 
     public void ClearData()
     {
         this.interactionObject = null;
-        this.rightHoldPosition = null;
-        this.leftHoldPosition = null;
-        this.dropMarker = null;
         this.linkedPrefab = null;
-        this.rightHandTarget = null;
-        this.leftHandTarget = null;
+        this.sceneParent = null;
+        this.objectBeingHeld = null;
+        this.noHandIK = true;
+        this.isRightHand = false;
+        this.isLeftHand = false;
+        this.isBothHands = false;
+        this.inventoryClipToPlay = null;
+        this.holdClipToPlay = null;
+        this.dropClipToPlay = null;
+        this.interactionClipToPlay = null;
+
     }
 }
