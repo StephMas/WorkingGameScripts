@@ -1,0 +1,246 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+//Attach to an empty transform in each scene and add all interactable objects as children.
+[System.Serializable]
+public class InteractionHelper_ObjectHolder : MonoBehaviour
+
+{
+    //public List<InteractionObject> intObjList;
+
+    //This is our list we want to use to represent our class as an array.
+    public List<InteractionObject> intObjList = new List<InteractionObject>(1);
+
+
+    void AddNew()
+    {
+        //Add a new index position to the end of our list
+        intObjList.Add(new InteractionObject());
+    }
+
+    void Remove(int index)
+    {
+        //Remove an index position from our list at a point in our list array
+        intObjList.RemoveAt(index);
+    }
+
+
+        //Returning information about the objects
+        public InteractionObject GetInteractionObjectByName (string _objName)
+    {
+        if (intObjList.Count <= 0)
+        {
+            Debug.Log("There are no interaction objects in the list.");
+            return null;
+        }
+
+        foreach (InteractionObject _intObj in intObjList)
+        {
+            if (_intObj.intObName == _objName)
+            {
+                return _intObj;
+            }
+        }
+
+        return null;
+    }
+
+    public string GetInteractionObjectName (InteractionObject _intObj)
+    {
+        if (intObjList.Count <= 0)
+        {
+            Debug.Log("There are no interaction objects in the list.");
+            return null;
+        }
+
+        else if (intObjList.Contains(_intObj))
+        {
+            return _intObj.intObName;
+        }
+
+        return null;
+    }
+
+    public InteractionObject GetInteractionObjectByHotspotID(int _hotspotID)
+    {
+        if (intObjList.Count <= 0)
+        {
+            Debug.Log("There are no interaction objects in the list.");
+            return null;
+        }
+
+        foreach (InteractionObject _intObj in intObjList)
+        {
+            if (_intObj.hotspotConstantID == _hotspotID)
+            {
+                return _intObj;
+            }
+        }
+
+        return null;
+    }
+
+    public int GetInteractionObjectInventoryID(InteractionObject _intObj)
+    {
+        if (intObjList.Count <= 0)
+        {
+            Debug.Log("There are no interaction objects in the list.");
+            return -1;
+        }
+
+        else if (intObjList.Contains(_intObj))
+        {
+            int _invID = _intObj.intInvID;
+            return _invID;
+        }
+
+        return -1;
+    }
+
+    public int GetInteractionObjectIndexID (InteractionObject _intObj)
+    {
+        if (intObjList.Count <= 0)
+        {
+            Debug.Log("There are no interaction objects in the list.");
+            return -1;
+        }
+
+        else if (intObjList.Contains(_intObj))
+        {
+            int i = intObjList.IndexOf(_intObj);
+            return i;
+        }
+
+        return -1;
+    }
+
+    public InteractionObject GetInteractionObjetByIndex (int _index)
+    {    
+        if (intObjList.Count <= 0)
+        {
+            Debug.Log("There are no interaction objects in the list.");
+            return null;
+        }
+
+        else
+        {
+            InteractionObject _objectToGet;
+            _objectToGet = intObjList[_index];
+
+            return _objectToGet;            
+        }
+    }
+
+
+    //Functions for the objects
+    public void DisableMeshRenderer(InteractionObject _intObj)
+    {
+        //Which object do you want to disable?
+    }
+
+    public void EnableMeshRenderer()
+    {
+        //Which object do you want to enable?
+    }
+
+    public void ChangeVariableValue()
+    {
+
+    }
+
+    //Test functions
+    public void PrintObjectName(string objectName)
+    {
+        InteractionObject i = GetInteractionObjectByName(objectName);
+        Debug.Log("The item invID is " + i.intObject.name);
+    }
+
+    public void ListObjectsInArray(InteractionHelper_ObjectHolder _holder)
+    {
+        Debug.Log("There are " + _holder.intObjList.Count.ToString() + " objects in this list.");
+
+        foreach (InteractionObject _int in _holder.intObjList)
+        {
+            Debug.Log(_int.intObName);
+        }
+    }
+
+    public void ObjectStatusUpdate(InteractionHelper_ObjectHolder _holder)
+    {
+        Debug.Log("There are " + _holder.intObjList.Count.ToString() + " objects in this list.");
+
+        foreach (InteractionObject _int in _holder.intObjList)
+        {
+            if (_int.isCarrying == true)
+            {
+                Debug.Log("The player is carrying " + _int.intObName);
+            }
+            else if (_int.isCarrying == false)
+            {
+                Debug.Log("The player is not carrying " + _int.intObName);
+            }
+        }
+    }
+
+/**
+    //Listener for the Hotspot Interactions (OnHotspotInteract (Hotspot hotspot, AC.Button button)). Whenever you interact with a hotspot, it will send the right values to the global variables.
+    public void OnHotspotInteraction()
+    {
+        string objectNameToSend;
+
+        //Get the hotspot constant ID.
+        int consID = hotspot.GetComponent<ConstantID>().constantID;
+
+        //Check the inventory for a matching hotspot constant ID and get the string name to send to the variable.
+        InvItem [] invItems = AC.InventoryManager.GetItemsInCategory(knowncategoryID);
+
+        if (invItems.Count > 0)
+        { foreach (InvItem _item in invItems)
+            {
+                if (_item.GetProperty(knownPropertyIDHotspotID) == consID)
+                {
+                    objectNameToSend = _item.GetProperty(knownPropertyIDName);
+
+                    //Send the object name to the global variable
+                    GlobalVariables.SetStringValue(knownVariableID, objectNameToSend);
+                }
+                else
+                {
+                    Debug.Log("The hotspot ID doesn't match any of the items in the inventory.");
+                    return;
+                }               
+            }
+        }
+        else
+        {
+            Debug.Log("There are not items in the item category.");
+            return;
+        }
+
+    }
+
+    //Alternative Listener for the Hotspot Interactions (OnHotspotInteract (Hotspot hotspot, AC.Button button)). Whenever you interact with a hotspot, it will send the right name to the global variables.
+    public void OnHotspotInteractionIDALT()
+    {
+
+        //Send the object name to the global variable
+        GlobalVariables.SetValue(knownVariableID, hotspot.GetComponent<ConstantID>().constantID);
+
+    }
+
+    //Alternative Listener for the Hotspot Interactions (OnHotspotInteract (Hotspot hotspot, AC.Button button)). Whenever you interact with a hotspot, it will send the right name to the global variables.
+    public void OnHotspotInteractionALT()
+    {
+
+        //Send the object name to the global variable
+        GlobalVariables.SetStringValue(knownVariableID, hotspot.GetName());
+
+    }
+
+    //Listener for the Inventory Interactions (OnInventoryInteract (InvItem invItem, int iconID);. When you click on an inventory item, it will send the right values to the global variables.
+    public void OnInventoryInteraction()
+    {
+        invItem = AC.InventoryManager.GetItemsInCategory(knowncategoryID);
+    } **/
+}
