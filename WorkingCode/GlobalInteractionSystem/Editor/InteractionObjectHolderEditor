@@ -1,0 +1,147 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEditor;
+
+
+// Custom Editor using SerializedProperties.
+// Automatic handling of multi-object editing, undo, and Prefab overrides.
+[CustomEditor(typeof(InteractionHelper_ObjectHolder))]
+[CanEditMultipleObjects]
+public class InteractionObjectHolderEditor : Editor
+{
+
+    enum displayFieldType { DisplayAsAutomaticFields, DisplayAsCustomizableGUIFields }
+    displayFieldType DisplayFieldType;
+
+    InteractionHelper_ObjectHolder t;
+    SerializedObject GetTarget;
+    SerializedProperty ThisList;
+    int ListSize;
+
+    void OnEnable()
+    {
+        t = (InteractionHelper_ObjectHolder)target;
+        GetTarget = new SerializedObject(t);
+        ThisList = GetTarget.FindProperty("intObjList"); // Find the List in our script and create a refrence of it
+    }
+
+    public override void OnInspectorGUI()
+    {
+        //Update our list
+
+        GetTarget.Update();
+
+        //Choose how to display the list<> Example purposes only
+        EditorGUILayout.Space();
+        EditorGUILayout.Space();
+        DisplayFieldType = (displayFieldType)EditorGUILayout.EnumPopup("", DisplayFieldType);
+
+        //Resize our list
+        EditorGUILayout.Space();
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("Define the list size with a number");
+
+        if (ThisList.arraySize != 0)
+        {
+            ListSize = ThisList.arraySize;
+        }
+
+        ListSize = EditorGUILayout.IntField("List Size", ListSize);
+
+        if (ListSize != ThisList.arraySize)
+        {
+            while (ListSize > ThisList.arraySize)
+            {
+                ThisList.InsertArrayElementAtIndex(ThisList.arraySize);
+            }
+            while (ListSize < ThisList.arraySize)
+            {
+                ThisList.DeleteArrayElementAtIndex(ThisList.arraySize - 1);
+            }
+        }
+
+        EditorGUILayout.Space();
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("Or");
+        EditorGUILayout.Space();
+        EditorGUILayout.Space();
+
+        //Or add a new item to the List<> with a button
+        if (GUILayout.Button("Add New Item"))
+        {
+            t.intObjList.Add(new InteractionObject());
+        }
+
+        EditorGUILayout.Space();
+        EditorGUILayout.Space();
+
+        //Display our list to the inspector window
+
+        for (int i = 0; i < ThisList.arraySize; i++)
+        {
+            SerializedProperty MyListRef = ThisList.GetArrayElementAtIndex(i);
+            SerializedProperty MyGO = MyListRef.FindPropertyRelative("intObject");
+            SerializedProperty MyIKTransform = MyListRef.FindPropertyRelative("intObj_ikTarget");
+            SerializedProperty MyGrabTransform = MyListRef.FindPropertyRelative("intObj_grabPosition");
+            SerializedProperty MyTakeOutTransform = MyListRef.FindPropertyRelative("intObj_takeOutPosition");
+            SerializedProperty MyInvID = MyListRef.FindPropertyRelative("intInvID");
+            SerializedProperty MyOName = MyListRef.FindPropertyRelative("intObName");
+            SerializedProperty MyHotspotID = MyListRef.FindPropertyRelative("hotspotConstantID");
+            SerializedProperty MyBoolID = MyListRef.FindPropertyRelative("isCarrying");
+
+
+            // Display the property fields in two ways.
+
+            if (DisplayFieldType == 0)
+            {// Choose to display automatic or custom field types. This is only for example to help display automatic and custom fields.
+                //1. Automatic, No customization <-- Choose me I'm automatic and easy to setup
+                EditorGUILayout.LabelField("Automatic Field By Property Type");
+                EditorGUILayout.PropertyField(MyGO);
+                EditorGUILayout.PropertyField(MyIKTransform);
+                EditorGUILayout.PropertyField(MyGrabTransform);
+                EditorGUILayout.PropertyField(MyTakeOutTransform);
+                EditorGUILayout.PropertyField(MyInvID);
+                EditorGUILayout.PropertyField(MyOName);
+                EditorGUILayout.PropertyField(MyHotspotID);
+                EditorGUILayout.PropertyField(MyBoolID);
+
+  
+            }
+
+            else
+            {
+                //Or
+
+                //2 : Full custom GUI Layout <-- Choose me I can be fully customized with GUI options.
+                EditorGUILayout.LabelField("Customizable Field With GUI");
+                MyGO.objectReferenceValue = EditorGUILayout.ObjectField("Interaction Object", MyGO.objectReferenceValue, typeof(GameObject), true);
+                MyIKTransform.objectReferenceValue = EditorGUILayout.ObjectField("IK Transform:", MyIKTransform.objectReferenceValue, typeof(Transform), true);
+                MyGrabTransform.objectReferenceValue = EditorGUILayout.ObjectField("Grab Transform:", MyGrabTransform.objectReferenceValue, typeof(Transform), true);
+                MyTakeOutTransform.objectReferenceValue = EditorGUILayout.ObjectField("Take Out Transform:", MyTakeOutTransform.objectReferenceValue, typeof(Transform), true);
+                MyInvID.intValue = EditorGUILayout.IntField("Linked Inventory ID", MyInvID.intValue);
+                MyOName.stringValue = EditorGUILayout.TextField("Object Name", MyOName.stringValue);
+                MyHotspotID.intValue = EditorGUILayout.IntField("Linked Hotspot ID", MyHotspotID.intValue);
+                MyBoolID.boolValue = EditorGUILayout.Toggle("Player is carrying?", MyBoolID.boolValue);
+
+
+            }
+
+            EditorGUILayout.Space();
+
+            //Remove this index from the List
+            if (GUILayout.Button("Remove Object (" + i.ToString() + ")"))
+            {
+                ThisList.DeleteArrayElementAtIndex(i);
+            }
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+        }
+
+        //Apply the changes to our list
+        GetTarget.ApplyModifiedProperties();
+    }
+}
+
