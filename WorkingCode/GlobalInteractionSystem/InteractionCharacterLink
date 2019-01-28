@@ -1,0 +1,99 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class InteractionCharacterLink : MonoBehaviour
+{
+    public InteractionHelper_ObjectHolder _intObjectHolder;
+
+    [HideInInspector]
+    public Transform handPositionRotation;
+    public string globalVariableValue; //Will always keep updated with the existing variable value.Declare it here or in a separate function.
+    public bool isHoldingItem = false;
+    public int globalVariableIntValue;
+
+
+    //ANIMATION EVENTS
+
+    //Parent the object to the right hand
+    public void ParentObjectToRightHand()
+    {
+        //Get the variable value
+        //globalVariableValue = GlobalVariables.GetStringValue(known variableID);
+
+        //Get the object by that name from the list.
+        InteractionObject interactionObject = _intObjectHolder.GetInteractionObjectByName(globalVariableValue);
+        //or if we are using the constantID
+        //InteractionObject altinteractionObject = _intObjectHolder.GetInteractionObjectByHotspotID(globalVariableIntValue);
+        GameObject objToParent = interactionObject.intObject;
+
+        //Check if the character is already holding something
+        if (isHoldingItem)
+        {
+            Debug.Log("The character is already holding" + globalVariableValue);
+            return;
+        }
+        else
+        {
+            //Parent the object to the right hand.
+
+            //Adjust the object to the right position and rotation.
+            objToParent.transform.localPosition = handPositionRotation.localPosition;
+            objToParent.transform.localRotation = handPositionRotation.localRotation;
+
+            //Remove from the Interaction Object Holder list
+            _intObjectHolder.intObjList.Remove(interactionObject);
+
+            //Set the bool so we know the character is holding something
+            isHoldingItem = true;
+        }
+    }
+
+    //Parent the object to the left hand
+    public void ParentObjectToLeftHand()
+    {
+        //Get the variable value
+        //globalVariableValue = GlobalVariables.GetStringValue (int variableID);
+
+        //Get the object by that name from the list.
+        InteractionObject interactionObject = _intObjectHolder.GetInteractionObjectByName(globalVariableValue);
+        GameObject objToParent = interactionObject.intObject;
+
+        //Check if the character is already holding something
+        if (isHoldingItem)
+        {
+            Debug.Log("The character is already holding" + globalVariableValue);
+            return;
+        }
+        else
+        {
+            //Parent the object to the left hand.
+
+            //Adjust the object to the right position and rotation.
+            objToParent.transform.localPosition = handPositionRotation.localPosition;
+            objToParent.transform.localRotation = handPositionRotation.localRotation;
+
+            //Remove from the Interaction Object Holder list
+            _intObjectHolder.intObjList.Remove(interactionObject);
+
+            //Set the bool so we know the character is holding something
+            isHoldingItem = true;
+        }
+    }
+
+    //Unparent the object and return it to the Interaction Object Holder
+    public void UnparentObjectFromHand()
+    {
+        //Which object are you unparenting?
+
+        //What is the transform set to for the Interaction Object Holder?
+
+        //Remember to add it back to the place it was before in the list
+
+        //Set the bool so we know the character isn't holding anything
+        isHoldingItem = false;
+    }
+
+
+
+}
