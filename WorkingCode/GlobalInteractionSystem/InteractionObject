@@ -1,0 +1,40 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+[System.Serializable]
+public class InteractionObject
+
+{
+    //MAIN REFERENCES
+
+    //The object (in the scene)
+    public GameObject intObject;
+    
+    //The ikTarget Transform. Child of hotspot
+    public Transform intObj_ikTarget;
+
+    //The grab Transform. Child of object
+    public Transform intObj_grabPosition;
+
+    //The take out Transform. Child of object.
+    public Transform intObj_takeOutPosition;
+
+    //INVENTORY PROPERTY REFERENCES  
+
+    //The linked inventory ID. 
+    public int intInvID;
+
+    //The object name. Will be replaced by the text label for the inventory property
+    public string intObName = "";
+
+    //The associated hotspot ID
+    public int hotspotConstantID;
+
+    //Is the player currently carrying this item?
+    public bool isCarrying;
+
+
+    }
+
+
